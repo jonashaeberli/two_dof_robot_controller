@@ -1,14 +1,10 @@
-from two_dof_plotter import MechanismPlotter
-import time
+from two_dof_pick_and_place import two_dof_pick_and_place
+import numpy as np
 
-# Create an object of MechanismPlotter
-two_dof_robot_plot = MechanismPlotter(0.25, 0.3, 0.1, 0, 0)
-two_dof_robot_plot.start_plot()
-two_dof_robot_plot.draw_required_work_envelope(0, 0)
-two_dof_robot_plot.draw_mechanism_with_inverse_kinematic(0.5, -0.0375)
-two_dof_robot_plot.show_plot()
-time.sleep(0.1)
 
-for i in range(500, 160, -5):
-    two_dof_robot_plot.draw_mechanism_with_inverse_kinematic(i/1000, -0.0375)
-    time.sleep(0.05)
+robot = two_dof_pick_and_place(250, 300, 100, np.deg2rad(10), 0, 0)
+test = robot.kinematics(kinematics_type="inverse", x=300, y=20)
+if test != "out_of_reach":
+    print(np.rad2deg(test.get("upper_arm_angle")), np.rad2deg(test.get("lower_arm_angle")))
+else:
+    print("Error cought: out_of_reach")
