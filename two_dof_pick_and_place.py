@@ -9,11 +9,11 @@ class two_dof_pick_and_place:
         self.upper_arm_length = 250
         self.lower_arm_length = 300
         self.lever_arm_length = 100
-        self.lever_arm_angle_offset = 0
-        self.gripper_x_offset = 0
-        self.gripper_y_offset = 0
-        self.x_rotation_offset = 0
-        self.y_rotation_offset = 0
+        self.lever_arm_angle_offset = np.deg2rad(-10)
+        self.gripper_x_offset = 35
+        self.gripper_y_offset = -16.25
+        self.x_rotation_offset = -25
+        self.y_rotation_offset = 110
         self.upper_arm_range = (np.deg2rad(110), np.deg2rad(-5))
         self.lower_arm_range = (np.deg2rad(10), np.deg2rad(-100))
         self.min_lever_distance = 52.5
@@ -49,7 +49,7 @@ class two_dof_pick_and_place:
                 y = y - self.gripper_y_offset - self.y_rotation_offset
                 c = np.sqrt(x**2 + y**2)
                 upper_arm_angle = np.arccos((self.upper_arm_length**2 + c**2 - self.lower_arm_length**2) / (2 * self.upper_arm_length * c)) + np.arctan(y/x)
-                lower_arm_angle = upper_arm_angle + np.arccos((self.lower_arm_length**2 + self.upper_arm_length**2 - c**2) / (2 * self.lower_arm_length * self.upper_arm_length)) - np.pi
+                lower_arm_angle = upper_arm_angle + np.arccos((self.lower_arm_length**2 + self.upper_arm_length**2 - c**2) / (2 * self.lower_arm_length * self.upper_arm_length)) - np.pi - self.lever_arm_angle_offset
                 return { "upper_arm_angle": upper_arm_angle, "lower_arm_angle": lower_arm_angle} #in radians
             else:
                 print("Invalid inverse kinematics arguments")
