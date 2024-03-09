@@ -25,7 +25,7 @@ class two_dof_pick_and_place:
         self.max_x = 600
         self.min_y = -400
         self.max_y = 400
-        self.resolution = 5
+        self.resolution = 50
 
         warnings.filterwarnings("error", category=RuntimeWarning)
 
@@ -57,16 +57,16 @@ class two_dof_pick_and_place:
     def check_position(self, x, y):
         try:
             angles = self.kinematics(kinematics_type="inverse", x=x, y=y)
-            if x >= 51.25: # Check Interfearance with Base mount
+            if x >= 90: # Check Interfearance with Base mount
                 if self.upper_arm_range[0] >= angles.get("upper_arm_angle") >= self.upper_arm_range[1] and self.lower_arm_range[0] >= angles.get("lower_arm_angle") >= self.lower_arm_range[1]: # Check if angles are within allowable range
-                    return True
+                    if self.lever_distance(angles.get("upper_arm_angle"), angles.get("lower_arm_angle")) >= self.min_lever_distance: # Check if lever distance is greater than minimum
+                        return True
         except RuntimeWarning as rw:
             pass
         return False
 
 
     def lever_distance (self, upper_arm_angle, lower_arm_angle):
-        print(np.rad2deg(np.pi-(-lower_arm_angle)-upper_arm_angle))
         return np.sin(np.pi-(-lower_arm_angle)-upper_arm_angle) * self.lever_arm_length
 
 
