@@ -29,19 +29,14 @@ class hardware:
     def setup(self):
         self.upper_arm_drive = odrive.find_any(serial_number=self.upper_arm_serial)
         self.lower_arm_drive = odrive.find_any(serial_number=self.lower_arm_serial)
-
-        # Do a check to see if the drives connected successfully
-        print("Upper Arm Errors: ", odrive.dump_errors(self.upper_arm_drive))
-        print("")
-        print("Lower Arm Errors: ", odrive.dump_errors(self.lower_arm_drive))
-
+        
         # Ask User if there are any errors
         input("Press Enter to continue if there are no errors...")
 
 
     def move_to(self, upper_arm_angle, lower_arm_angle):
         self.upper_arm_command_position = self.upper_arm_zero - upper_arm_angle/360*self.gear_ratio
-        self.lower_arm_command_position = self.lower_arm_zero - lower_arm_angle/360*self.gear_ratio
+        self.lower_arm_command_position = self.lower_arm_zero - (lower_arm_angle * -1)/360*self.gear_ratio
 
         pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=np.deg2rad(upper_arm_angle), lower_arm_angle=np.deg2rad(lower_arm_angle))
 
