@@ -38,9 +38,6 @@ class hardware:
         # Ask User if there are any errors
         input("Press Enter to continue if there are no errors...")
 
-        # Next we set the correct Values for the Zero Position in Rotations
-        self.uppper_arm_zero = self.upper_arm_refere
-
 
     def move_to(self, upper_arm_angle, lower_arm_angle):
         self.upper_arm_command_position = self.upper_arm_zero - upper_arm_angle/360*self.gear_ratio
