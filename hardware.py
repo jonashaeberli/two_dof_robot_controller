@@ -1,6 +1,7 @@
 import odrive
 from odrive.enums import *
 from kinematics import kinematics
+import numpy as np
 
 class hardware:
     def __init__(self):
@@ -26,11 +27,11 @@ class hardware:
 
 
     def setup(self):
-        self.uppper_arm_drive = odrive.find_any(serial_number=self.upper_arm_serial)
+        self.upper_arm_drive = odrive.find_any(serial_number=self.upper_arm_serial)
         self.lower_arm_drive = odrive.find_any(serial_number=self.lower_arm_serial)
 
         # Do a check to see if the drives connected successfully
-        print("Upper Arm Errors: ", odrive.dump_errors(self.uppper_arm_drive))
+        print("Upper Arm Errors: ", odrive.dump_errors(self.upper_arm_drive))
         print("")
         print("Lower Arm Errors: ", odrive.dump_errors(self.lower_arm_drive))
 
@@ -45,8 +46,10 @@ class hardware:
         self.upper_arm_command_position = self.upper_arm_zero - upper_arm_angle/360*self.gear_ratio
         self.lower_arm_command_position = self.lower_arm_zero - lower_arm_angle/360*self.gear_ratio
 
-        if kinematics.check_position(upper_arm_angle, lower_arm_angle):
-            self.uppper_arm_drive.axis0.controller.input_pos = self.upper_arm_command_position
+        pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=np.deg2rad(upper_arm_angle), lower_arm_angle=np.deg2rad(lower_arm_angle))
+
+        if self.kinematics.check_position(pos.get("x"), pos.get("y")):
+            self.upper_arm_drive.axis0.controller.input_pos = self.upper_arm_command_position
             self.lower_arm_drive.axis0.controller.input_pos = self.lower_arm_command_position
         else:
             print("Invalid Position or collision detected. This should not happen! There has to be an error in the planner")
