@@ -1,7 +1,13 @@
-from two_dof_pick_and_place import two_dof_pick_and_place
+from robot import robot
 import numpy as np
 import time
 
 
-robot = two_dof_pick_and_place()
-robot.check_work_envelope()
+pick_and_place = robot()
+pick_and_place.hardware.move_dummy(110, 0)
+input("Press Enter to move...")
+pick_and_place.hardware.move_to(110, 0)
+
+pick_and_place.hardware.move_dummy(90, 0)
+input("Press Enter to move...")
+pick_and_place.hardware.move_to(90, 0)

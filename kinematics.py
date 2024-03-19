@@ -6,7 +6,7 @@ from tqdm import tqdm
 from scipy.spatial import ConvexHull
 
 
-class two_dof_pick_and_place:
+class kinematics:
     def __init__(self):
         self.upper_arm_length = 250
         self.lower_arm_length = 300
@@ -109,11 +109,3 @@ class two_dof_pick_and_place:
         msp.add_line(max_points[0], min_points[0])
         msp.add_line(max_points[-1], min_points[-1])
         doc.saveas("plot.dxf")
-        
-
-    def draw_required_work_envelope(self):
-        x = [160, 160, 500, 320, 160]
-        y = [60, -37.5, -37.5, 60, 60]
-
-        # Plot the work envelope
-        self.axs[0].fill_between(x, y, color='skyblue', alpha=0.5)
