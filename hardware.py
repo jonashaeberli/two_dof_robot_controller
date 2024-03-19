@@ -36,7 +36,7 @@ class hardware:
 
     def move_to(self, upper_arm_angle, lower_arm_angle):
         self.upper_arm_command_position = self.upper_arm_zero - upper_arm_angle/360*self.gear_ratio
-        self.lower_arm_command_position = self.lower_arm_zero - lower_arm_angle/360*self.gear_ratio
+        self.lower_arm_command_position = self.lower_arm_zero - (lower_arm_angle * -1)/360*self.gear_ratio
 
         pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=np.deg2rad(upper_arm_angle), lower_arm_angle=np.deg2rad(lower_arm_angle))
 
