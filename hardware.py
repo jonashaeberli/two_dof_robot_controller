@@ -29,12 +29,7 @@ class hardware:
     def setup(self):
         self.upper_arm_drive = odrive.find_any(serial_number=self.upper_arm_serial)
         self.lower_arm_drive = odrive.find_any(serial_number=self.lower_arm_serial)
-
-        # Do a check to see if the drives connected successfully
-        print("Upper Arm Errors: ", odrive.dump_errors(self.upper_arm_drive))
-        print("")
-        print("Lower Arm Errors: ", odrive.dump_errors(self.lower_arm_drive))
-
+        
         # Ask User if there are any errors
         input("Press Enter to continue if there are no errors...")
 
