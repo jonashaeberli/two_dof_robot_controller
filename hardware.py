@@ -39,7 +39,7 @@ class hardware:
             print("Could not connect to ODrives")
 
 
-    def move_to(self, upper_arm_angle, lower_arm_angle):
+    def move(self, upper_arm_angle, lower_arm_angle):
         self.upper_arm_command_position = self.upper_arm_zero - upper_arm_angle / (2 * np.pi) * self.gear_ratio
         self.lower_arm_command_position = self.lower_arm_zero - (lower_arm_angle * -1) / (2 * np.pi) * self.gear_ratio
 
@@ -50,8 +50,17 @@ class hardware:
         if self.kinematics.check_angles(upper_arm_angle, lower_arm_angle):
             self.upper_arm_drive.axis0.controller.input_pos = self.upper_arm_command_position
             self.lower_arm_drive.axis0.controller.input_pos = self.lower_arm_command_position
+            
         else:
             print("Invalid Position or collision detected. This should not happen! There has to be an error in the planner")
             return False
         
         return True
+    
+
+    def get_pos(self):
+        return {"upper_arm_angle": self.upper_arm_drive.axis0.encoder.pos_estimate, "lower_arm_angle": self.lower_arm_drive.axis0.encoder.pos_estimate}
+    
+
+    def pos_to_angle(self, upper_arm_angle, lower_arm_angle):
+        return {"upper_arm_angle": (self.upper_arm_zero - self.upper_arm_command_position) * (2 * np.pi) / self.gear_ratio, "lower_arm_angle": -1 * ((self.lower_arm_zero - self.lower_arm_command_position) * (2 * np.pi) / self.gear_ratio)}
