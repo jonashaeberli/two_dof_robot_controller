@@ -14,10 +14,10 @@ class hardware:
         self.gear_ratio = 100 # Both arms have the same gear ration
 
         # Next we set the correct position for the Zero Position in Rotations
-        self.upper_arm_zero_hardware_offset = np.deg2rad(112.50) # We work in degrees from horizontal position
+        self.upper_arm_zero_hardware_offset = np.deg2rad(112.50) # We work in rads from horizontal position
         self.upper_arm_zero = (self.upper_arm_zero_hardware_offset / (2 * np.pi) * self.gear_ratio) + self.upper_arm_reference_turns
 
-        self.lower_arm_zero_hardware_offset = np.deg2rad(-12.5) # We work in degrees from horizontal position
+        self.lower_arm_zero_hardware_offset = np.deg2rad(-12.5) # We work in rads from horizontal position
         self.lower_arm_zero = (self.lower_arm_zero_hardware_offset / (2 * np.pi) * self.gear_ratio) + self.lower_arm_reference_turns
 
         self.kinematics = kinematics()
@@ -40,21 +40,18 @@ class hardware:
 
 
     def move_to(self, upper_arm_angle, lower_arm_angle):
-              
         self.upper_arm_command_position = self.upper_arm_zero - upper_arm_angle / (2 * np.pi) * self.gear_ratio
         self.lower_arm_command_position = self.lower_arm_zero - (lower_arm_angle * -1) / (2 * np.pi) * self.gear_ratio
 
-        print("Upper Arm Command Position: ", self.upper_arm_command_position)
-        print("Lower Arm Command Position: ", self.lower_arm_command_position)
-
         if self.connected == False:
             print("Not connected to ODrives")
-            return
+            return False
 
-        pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=upper_arm_angle, lower_arm_angle=lower_arm_angle)
-
-        if self.kinematics.check_position(pos.get("x"), pos.get("y")):
+        if self.kinematics.check_angles(upper_arm_angle, lower_arm_angle):
             self.upper_arm_drive.axis0.controller.input_pos = self.upper_arm_command_position
             self.lower_arm_drive.axis0.controller.input_pos = self.lower_arm_command_position
         else:
             print("Invalid Position or collision detected. This should not happen! There has to be an error in the planner")
+            return False
+        
+        return True

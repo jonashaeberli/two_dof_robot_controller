@@ -64,6 +64,18 @@ class kinematics:
         except RuntimeWarning as rw:
             pass
         return False
+    
+
+    def check_angles(self, upper_arm_angle, lower_arm_angle):
+        try:
+            pos = self.kinematics(kinematics_type="forward", upper_arm_angle=upper_arm_angle, lower_arm_angle=lower_arm_angle)
+            if pos.get("x") >= 90: # Check Interfearance with Base mount
+                if self.upper_arm_range[0] >= upper_arm_angle >= self.upper_arm_range[1] and self.lower_arm_range[0] >= lower_arm_angle >= self.lower_arm_range[1]: # Check if angles are within allowable range
+                    if self.lever_distance(upper_arm_angle, lower_arm_angle) >= self.min_lever_distance: # Check if lever distance is greater than minimum
+                        return True
+        except RuntimeWarning as rw:
+            pass
+        return False
 
 
     def lever_distance (self, upper_arm_angle, lower_arm_angle):
