@@ -7,6 +7,15 @@ class sim:
     def __init__(self):
         self.upper_arm_length = 250  # Define the length of the arms
         self.lower_arm_length = 300
+
+        self.running = False
+
+    def handover(self, kinematics):
+        self.kinematics = kinematics
+
+
+    def setup(self):
+        self.running = True
         self.upper_arm_angle = np.deg2rad(-5)
         self.lower_arm_angle = np.deg2rad(-100)
 
@@ -27,14 +36,14 @@ class sim:
         self.update_sim()
 
         plt.show(block=False)
+        return True
 
-    def handover(self, kinematics):
-        self.kinematics = kinematics
 
     def move(self, upper_arm_angle, lower_arm_angle):
         self.upper_arm_angle = upper_arm_angle
         self.lower_arm_angle = lower_arm_angle
         self.update_sim()
+
 
     def update_sim(self):
         # Calculate the positions of the arm joints
@@ -51,6 +60,7 @@ class sim:
         # Redraw the plot
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+
 
     def get_pos(self):
         return {"upper_arm_angle": self.upper_arm_angle, "lower_arm_angle": self.lower_arm_angle}

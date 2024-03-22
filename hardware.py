@@ -1,6 +1,5 @@
 import odrive
 from odrive.enums import *
-from kinematics import kinematics
 import numpy as np
 
 class hardware:
@@ -26,8 +25,8 @@ class hardware:
         print("Lower Arm Zero: ", self.lower_arm_zero)
 
     
-    def handover(self, kinematics, planner):
-        self.planner = planner
+    def handover(self, kinematics, controller):
+        self.controller = controller
         self.kinematics = kinematics
 
 
@@ -38,8 +37,10 @@ class hardware:
         if self.upper_arm_drive is not None and self.lower_arm_drive is not None:
             self.connected = True
             print("Connected to ODrives")
+            return True
         else:
             print("Could not connect to ODrives")
+            return False
 
     
     def shutdown(self):
@@ -62,7 +63,7 @@ class hardware:
             self.lower_arm_drive.axis0.controller.input_pos = self.lower_arm_command_position
             
         else:
-            print("Invalid Position or collision detected. This should not happen! There has to be an error in the planner")
+            print("Invalid Position or collision detected. This should not happen! There has to be an error in the controller")
             return False
     
 

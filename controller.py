@@ -1,8 +1,6 @@
 import numpy as np
-from hardware import hardware
-from kinematics import kinematics
 
-class planner:
+class controller:
     def __init__(self):
         self.publish_rate = 200 # Hz
         self.trajectory_resolution = 0.1 # mm
@@ -21,6 +19,15 @@ class planner:
         self.hardware = hardware
         self.kinematics = kinematics
 
+
+    def setup_controller(self):
+        if self.hardware.setup() == True:
+            print("Hardware/Sim setup successful")
+            return True
+        else:
+            print("Hardware/Sim setup failed")
+            return False
+        
 
     def check_zero(self):
         pass # TODO: We should move with limited acceleration and joint move to the end of normal joint range and check if the arm is at the correct location
