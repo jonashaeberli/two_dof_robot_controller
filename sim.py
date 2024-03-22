@@ -28,8 +28,10 @@ class sim:
         self.lever_arm_extension, = self.ax.plot([], [], 'g-')
         self.lever_connection, = self.ax.plot([], [], 'g-')
         self.gripper, = self.ax.plot([], [], 'c-')
-        # This annotation will be used to represent the end effektor position
+        # This point will be used to represent the end effektor position
         self.last_annotation = None
+
+        self.move_counter = 0
 
         # Set up the plot limits
         self.ax.set_xlim(-600, 600)
@@ -51,7 +53,10 @@ class sim:
     def move(self, upper_arm_angle, lower_arm_angle):
         self.upper_arm_angle = upper_arm_angle
         self.lower_arm_angle = lower_arm_angle
-        self.update_sim()
+
+        self.move_counter += 1
+        if self.move_counter % 10 == 0:
+            self.update_sim()
 
 
     def update_sim(self):
