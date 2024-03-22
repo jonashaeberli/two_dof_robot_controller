@@ -20,12 +20,15 @@ class hardware:
         self.lower_arm_zero_hardware_offset = np.deg2rad(-12.5) # We work in rads from horizontal position
         self.lower_arm_zero = (self.lower_arm_zero_hardware_offset / (2 * np.pi) * self.gear_ratio) + self.lower_arm_reference_turns
 
-        self.kinematics = kinematics()
-
         self.connected = False
 
         print("Upper Arm Zero: ", self.upper_arm_zero)
         print("Lower Arm Zero: ", self.lower_arm_zero)
+
+    
+    def handover(self, kinematics, planner):
+        self.planner = planner
+        self.kinematics = kinematics
 
 
     def setup(self):
@@ -46,10 +49,6 @@ class hardware:
             self.lower_arm_drive = None
 
 
-    def check_zero(self):
-        pass # TODO: We should move with limited acceleration and joint move to the end of normal joint range and check if the arm is at the correct location
-
-
     def move(self, upper_arm_angle, lower_arm_angle):
         self.upper_arm_command_position = self.upper_arm_zero - upper_arm_angle / (2 * np.pi) * self.gear_ratio
         self.lower_arm_command_position = self.lower_arm_zero - (lower_arm_angle * -1) / (2 * np.pi) * self.gear_ratio
@@ -65,8 +64,6 @@ class hardware:
         else:
             print("Invalid Position or collision detected. This should not happen! There has to be an error in the planner")
             return False
-        
-        return True
     
 
     def get_pos(self):

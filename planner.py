@@ -16,8 +16,14 @@ class planner:
 
         self.trajectory = []
 
-        self.hardware = hardware()
-        self.kinematics = kinematics()
+
+    def handover(self, hardware, kinematics):
+        self.hardware = hardware
+        self.kinematics = kinematics
+
+
+    def check_zero(self):
+        pass # TODO: We should move with limited acceleration and joint move to the end of normal joint range and check if the arm is at the correct location
 
 
     def moveLconst(self, x, y): #TODO: We need to check the points in the trajectory to make sure they are valid (no collisions, within range, etc.) we have check_position and check_angles in kinematics.py
