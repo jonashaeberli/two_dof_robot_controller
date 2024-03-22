@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 class controller:
     def __init__(self):
@@ -33,32 +34,21 @@ class controller:
         pass # TODO: We should move with limited acceleration and joint move to the end of normal joint range and check if the arm is at the correct location
 
 
-    def moveLconst(self, x, y): #TODO: We need to check the points in the trajectory to make sure they are valid (no collisions, within range, etc.) we have check_position and check_angles in kinematics.py
-        current_angle = self.hardware.get_pos()
-        current_pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=current_angle.get("upper_arm_angle"), lower_arm_angle=current_angle.get("lower_arm_angle"))
-        distance = np.sqrt((x-current_pos.get("x"))**2 + (y-current_pos.get("y"))**2)
+    def moveLconst(self, x, y, start_x, start_y): #TODO: We need to check the points in the trajectory to make sure they are valid (no collisions, within range, etc.) we have check_position and check_angles in kinematics.py
+        distance = np.sqrt((x-start_x)**2 + (y-start_y)**2)
         time = distance / self.max_linear_velocity
         steps = int(time * self.publish_rate)
-        x_traj = np.linspace(current_pos.get("x"), x, steps)
-        y_traj = np.linspace(current_pos.get("y"), y, steps)
+        x_traj = np.linspace(start_x, x, steps)
+        y_traj = np.linspace(start_y, y, steps)
         for i in range(steps):
             pos = self.kinematics.kinematics(kinematics_type="inverse", x=x_traj[i], y=y_traj[i])
             self.trajectory.append(pos)
 
 
-    def moveL(self, x, y, execution = True, start_x = None , start_y = None):
-        self.trajectory = []
+    def moveL(self, x, y, start_x , start_y):
+        current_pos = {"x": start_x, "y": start_y}
 
-        if start_x is None and start_y is None:
-            current_angle = self.hardware.get_pos()
-            current_pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=current_angle.get("upper_arm_angle"), lower_arm_angle=current_angle.get("lower_arm_angle"))
-        elif start_x is not None and start_y is not None:
-            current_pos = {"x": start_x, "y": start_y}
-        else:
-            print("Invalid input received!")
-            return
-
-        distance = np.sqrt((x - current_pos.get("x"))**2 + (y - current_pos.get("y"))**2)
+        distance = np.sqrt((x - start_x)**2 + (y - start_y)**2)
         max_linear_velocity = self.max_linear_velocity
         acceleration = self.max_linear_acceleration
         deceleration = self.max_linear_acceleration # We do it like that that we later can have different acceleration and deceleration values
@@ -104,7 +94,7 @@ class controller:
             displacement += (max_linear_velocity * (t - acceleration_time)) if t <= acceleration_time + time_at_max_velocity else acceleration_distance + max_linear_velocity * (t - acceleration_time - time_at_max_velocity)
             displacement += (max_linear_velocity * (deceleration_time - (t - acceleration_time - time_at_max_velocity)) - 0.5 * deceleration * (deceleration_time - (t - acceleration_time - time_at_max_velocity))**2) if t > total_time - deceleration_time else distance
 
-            pos = self.kinematics.kinematics(kinematics_type="inverse", x=current_pos.get("x") + (x - current_pos.get("x")) * (displacement / distance), y=current_pos.get("y") + (y - current_pos.get("y")) * (displacement / distance))
+            pos = self.kinematics.kinematics(kinematics_type="inverse", x=start_x + (x - start_x) * (displacement / distance), y=start_y + (y - start_y) * (displacement / distance))
             self.trajectory.append(pos)
 
         # TODO: Execute trajectory if execution is enabled. Else we should return the trajectory
@@ -133,7 +123,33 @@ class controller:
         steps = int(time * self.publish_rate)
 
         #TODO: Implement the trajectory generation for joint movements
-        
+    
+
+    def validate_trajectory(self):
+        for pos in self.trajectory:
+            if self.kinematics.check_angles(pos.get("upper_arm_angle"), pos.get("lower_arm_angle")):
+                print("Point is valid")
+            else:
+                print("Point is invalid")
+                return False
+        return True
+
+
+    def execute_trajectory(self):
+        debt_time = 0.0
+        for pos in self.trajectory:
+            start_time = time.time()  # start timing
+            self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
+            end_time = time.time()  # end timing
+            elapsed_time = end_time - start_time  # calculate elapsed time
+
+            debt_time += elapsed_time - self.dt  # update debt time
+            sleep_time = max(self.dt - elapsed_time, -debt_time)  # calculate sleep time, can't be more than debt time
+            if sleep_time > 0:  # if there's time left, sleep
+                time.sleep(sleep_time)
+                debt_time += sleep_time - self.dt  # update debt time
+
+        self.clear_trajectory()
 
 
     def clear_trajectory(self):
