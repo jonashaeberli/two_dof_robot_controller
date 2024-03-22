@@ -59,7 +59,8 @@ class hardware:
     
 
     def get_pos(self):
-        return {"upper_arm_angle": self.upper_arm_drive.axis0.encoder.pos_estimate, "lower_arm_angle": self.lower_arm_drive.axis0.encoder.pos_estimate}
+        pos = self.pos_to_angle(self.upper_arm_drive.axis0.encoder.pos_estimate, self.lower_arm_drive.axis0.encoder.pos_estimate)
+        return {"upper_arm_angle": pos.get("upper_arm_angle"), "lower_arm_angle": pos.get("lower_arm_angle")}
     
 
     def pos_to_angle(self, upper_arm_angle, lower_arm_angle):
