@@ -38,6 +38,17 @@ class hardware:
         else:
             print("Could not connect to ODrives")
 
+    
+    def shutdown(self):
+        if self.upper_arm_drive is not None:
+            self.upper_arm_drive = None
+        if self.lower_arm_drive is not None:
+            self.lower_arm_drive = None
+
+
+    def check_zero(self):
+        pass # TODO: We should move with limited acceleration and joint move to the end of normal joint range and check if the arm is at the correct location
+
 
     def move(self, upper_arm_angle, lower_arm_angle):
         self.upper_arm_command_position = self.upper_arm_zero - upper_arm_angle / (2 * np.pi) * self.gear_ratio
