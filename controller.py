@@ -8,12 +8,13 @@ class controller:
         self.dt = 1 / self.publish_rate
 
         self.max_linear_velocity = 100 # mm/s
-        self.max_linear_acceleration = 10 # mm/s^2 accel/deccel
+        self.max_linear_acceleration = 40 # mm/s^2 accel/deccel
 
         self.max_angular_velocity = np.pi # rad/s
         self.max_angular_acceleration = 12*np.pi # rad/s^2 accel/deccel
 
         self.trajectory = []
+        self.trajectory_valid = False
 
 
     def handover(self, hardware, kinematics):
@@ -46,12 +47,12 @@ class controller:
 
 
     def moveL(self, x, y, start_x , start_y):
-        current_pos = {"x": start_x, "y": start_y}
+        distance = np.sqrt((x - start_x)**2 + (y - start_y)**2) # Distance between start and end point
 
-        distance = np.sqrt((x - start_x)**2 + (y - start_y)**2)
+        # Set values for acceleration and deceleration as well as max velocity
         max_linear_velocity = self.max_linear_velocity
         acceleration = self.max_linear_acceleration
-        deceleration = self.max_linear_acceleration # We do it like that that we later can have different acceleration and deceleration values
+        deceleration = -self.max_linear_acceleration # We do it like that that we later can have different acceleration and deceleration values
         
         acceleration_time = max_linear_velocity / acceleration
         deceleration_time = max_linear_velocity / deceleration # We do it like that that we later can have different acceleration and deceleration values
@@ -128,29 +129,32 @@ class controller:
     def validate_trajectory(self):
         for pos in self.trajectory:
             if self.kinematics.check_angles(pos.get("upper_arm_angle"), pos.get("lower_arm_angle")):
-                print("Point is valid")
+                continue
             else:
-                print("Point is invalid")
                 return False
+        self.trajectory_valid = True
         return True
 
 
     def execute_trajectory(self):
         debt_time = 0.0
-        for pos in self.trajectory:
-            start_time = time.time()  # start timing
-            self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
-            end_time = time.time()  # end timing
-            elapsed_time = end_time - start_time  # calculate elapsed time
+        if self.trajectory_valid:
+            for pos in self.trajectory:
+                start_time = time.time()  # start timing
+                self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
+                end_time = time.time()  # end timing
+                elapsed_time = end_time - start_time  # calculate elapsed time
 
-            debt_time += elapsed_time - self.dt  # update debt time
-            sleep_time = max(self.dt - elapsed_time, -debt_time)  # calculate sleep time, can't be more than debt time
-            if sleep_time > 0:  # if there's time left, sleep
-                time.sleep(sleep_time)
-                debt_time += sleep_time - self.dt  # update debt time
-
-        self.clear_trajectory()
+                debt_time += elapsed_time - self.dt  # update debt time
+                sleep_time = max(self.dt - elapsed_time, -debt_time)  # calculate sleep time, can't be more than debt time
+                if sleep_time > 0:  # if there's time left, sleep
+                    time.sleep(sleep_time)
+                    debt_time += sleep_time - self.dt  # update debt time
+            self.clear_trajectory()
+        else:
+            print("Trajectory is not valid or validated, can't execute!")
 
 
     def clear_trajectory(self):
         self.trajectory = []
+        self.trajectory_valid = False
