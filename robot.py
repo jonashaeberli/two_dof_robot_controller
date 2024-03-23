@@ -11,7 +11,7 @@ class robot:
         self.sim = sim()
 
         self.hardware.handover(self.kinematics, self.controller)
-        self.controller.handover(self.hardware if run_sim is False else self.sim, self.kinematics) # TODO: To run in simulation we should use the sim instrad of the hardware maybe add method or input to select sim or hardware
+        self.controller.handover(self.hardware if run_sim is False else self.sim, self.kinematics)
 
         self.initialized = True
 

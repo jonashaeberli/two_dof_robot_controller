@@ -10,11 +10,13 @@ class controller:
         self.max_linear_velocity = 800 # mm/s
         self.max_linear_acceleration = 2000 # mm/s^2 accel/deccel
 
-        self.max_angular_velocity = np.pi # rad/s
-        self.max_angular_acceleration = 12*np.pi # rad/s^2 accel/deccel
+        self.max_angular_velocity = np.pi / 20 # rad/s
+        self.max_angular_acceleration = 10*np.pi # rad/s^2 accel/deccel
 
         self.trajectory = []
         self.trajectory_valid = False
+
+        self.status = False
 
 
     def handover(self, hardware, kinematics):
@@ -23,8 +25,11 @@ class controller:
 
 
     def setup_controller(self):
-        if self.hardware.setup() == True:
+        status = self.hardware.setup()
+        time.sleep(0.5)
+        if status == True:
             print("Hardware/Sim setup successful")
+            self.status = True
             return True
         else:
             print("Hardware/Sim setup failed")
@@ -32,7 +37,20 @@ class controller:
         
 
     def check_zero_park(self):
-        pass # TODO: We should move with limited acceleration and joint move to the end of normal joint range and check if the arm is at the correct location
+        if self.status == True:
+            input("Everything ready press Enter to go to zero position")
+        else:
+            print("Hardware/Sim not setup")
+            return
+
+        self.clear_trajectory()
+        pos = self.hardware.get_pos()
+        zero_position = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=np.deg2rad(109.9), lower_arm_angle=np.deg2rad(9.9))
+        self.moveJconst(zero_position.get("x"), zero_position.get("y"), start_x=pos.get("x"), start_y=pos.get("y"))
+        if self.validate_trajectory():
+            print("Trajectory is valid")
+            input("Press Enter to go to reference position KEEP HANDS ON THE EMERGENCY STOP")
+            self.execute_trajectory()
 
 
     def moveL(self, x, y, start_x = None , start_y = None):
@@ -72,15 +90,13 @@ class controller:
         total_time = (2*acceleration_time) + time_at_max_velocity
         
         # Calculate number of steps based on update rate
-        steps = int(total_time * self.publish_rate * 10)
+        steps = int(total_time * self.publish_rate)
         
         # Generate time array for trajectory
         time_array = np.linspace(0, total_time, steps)
-        iteration = 10
         
         # Generate trajectory points
         for t in time_array:
-            iteration += 1
             if time_at_max_velocity == 0:
                 if t <= acceleration_time:
                     displacement = 0.5 * acceleration * t**2
@@ -95,39 +111,38 @@ class controller:
                     t_deceleration = t - (acceleration_time + time_at_max_velocity)
                     displacement = acceleration_distance + max_linear_velocity * time_at_max_velocity + max_linear_velocity * t_deceleration - 0.5 * acceleration * t_deceleration**2
             
-            if iteration % 10 == 0:
-                pos = self.kinematics.kinematics(kinematics_type="inverse", x=start_x + (x-start_x) * (displacement / distance), y=start_y + (y - start_y) * (displacement / distance))
-                self.trajectory.append(pos)
-            elif iteration >= 10:
-                iteration = 0
 
-        # TODO: Execute trajectory if execution is enabled. Else we should return the trajectory
+            pos = self.kinematics.kinematics(kinematics_type="inverse", x=start_x + (x-start_x) * (displacement / distance), y=start_y + (y - start_y) * (displacement / distance))
+            self.trajectory.append(pos)
 
 
     def moveJconst(self, x, y, execution = True, start_x = None, start_y = None):
         if start_x is None and start_y is None:
-            current_angle = self.hardware.get_pos()
-            current_pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=current_angle.get("upper_arm_angle"), lower_arm_angle=current_angle.get("lower_arm_angle"))
-        elif start_x is not None and start_y is not None:
-            current_pos = {"x": start_x, "y": start_y}
-        else:
+            angles = self.trajectory[len(self.trajectory)-1]
+            pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=angles.get("upper_arm_angle"), lower_arm_angle=angles.get("lower_arm_angle"))
+            start_x = pos.get("x")
+            start_y = pos.get("y")
+        elif start_x is None or start_y is None:
             print("Invalid Input received")
             return
         
         # First we need to find the travel distances for both joints. Therefore we need the inverse kineamtics to find start and end joint values
         goal_angles = self.kinematics.kinematics(kinematics_type="inverse", x=x, y=y)
-        start_angles = self.kinematics.kinematics(kinematics_type="inverse", x=current_pos.get("x"), y=current_pos.get("y"))
+        start_angles = self.kinematics.kinematics(kinematics_type="inverse", x=start_x, y=start_y)
 
         # Calculate the distance for each joint
-        distance_upper = goal_angles.get("upper_arm_angle") - start_angles.get("lower_arm_angle")
-        distance_lower = goal_angles.get("upper_arm_angle") - start_angles.get("lower_arm_angle")
+        distance_upper = goal_angles.get("upper_arm_angle") - start_angles.get("upper_arm_angle")
+        distance_lower = goal_angles.get("lower_arm_angle") - start_angles.get("lower_arm_angle")
         max_distance = distance_upper if distance_upper > distance_lower else distance_lower
 
-        time = max_distance / self.max_angular_velocity
+        time = np.absolute(max_distance / self.max_angular_velocity)
         steps = int(time * self.publish_rate)
+        time_array = np.linspace(0, time, steps)
 
-        #TODO: Implement the trajectory generation for joint movements
-    
+        for t in time_array:
+            pos = {"upper_arm_angle": start_angles.get("upper_arm_angle") + distance_upper * (t / time), "lower_arm_angle": start_angles.get("lower_arm_angle") + distance_lower * (t / time)}
+            self.trajectory.append(pos)
+
 
     def validate_trajectory(self):
         for pos in self.trajectory:
