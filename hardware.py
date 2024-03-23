@@ -1,6 +1,8 @@
 import odrive
 from odrive.enums import *
 import numpy as np
+import serial
+import time
 
 class hardware:
     def __init__(self):
@@ -37,6 +39,8 @@ class hardware:
         if self.upper_arm_drive is not None and self.lower_arm_drive is not None:
             self.connected = True
             print("Connected to ODrives")
+            self.ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1) # Chnange USB port to the one of the arduino
+            self.ser.reset_input_buffer()
             return True
         else:
             print("Could not connect to ODrives")
@@ -69,3 +73,18 @@ class hardware:
 
     def pos_to_angle(self, upper_arm_angle, lower_arm_angle):
         return {"upper_arm_angle": (self.upper_arm_zero - self.upper_arm_command_position) * (2 * np.pi) / self.gear_ratio, "lower_arm_angle": -1 * ((self.lower_arm_zero - self.lower_arm_command_position) * (2 * np.pi) / self.gear_ratio)}
+    
+
+    def gripper(self, state):
+        if state == "open":
+            self.ser.write(b"open\n")
+            line = self.ser.readline().decode('utf-8').rstrip()
+            if line == "gripper opened":
+                return True
+        elif state == "close":
+            self.ser.write(b"close\n")
+            line = self.ser.readline().decode('utf-8').rstrip()
+            if line == "gripper closed":
+                return True
+        else:
+            print("Invalid gripper state")
