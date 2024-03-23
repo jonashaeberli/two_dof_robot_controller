@@ -7,8 +7,8 @@ class controller:
         self.trajectory_resolution = 0.1 # mm
         self.dt = 1 / self.publish_rate
 
-        self.max_linear_velocity = 200 # mm/s
-        self.max_linear_acceleration = 200 # mm/s^2 accel/deccel
+        self.max_linear_velocity = 800 # mm/s
+        self.max_linear_acceleration = 2000 # mm/s^2 accel/deccel
 
         self.max_angular_velocity = np.pi # rad/s
         self.max_angular_acceleration = 12*np.pi # rad/s^2 accel/deccel
@@ -31,22 +31,20 @@ class controller:
             return False
         
 
-    def check_zero(self):
+    def check_zero_park(self):
         pass # TODO: We should move with limited acceleration and joint move to the end of normal joint range and check if the arm is at the correct location
 
 
-    def moveLconst(self, x, y, start_x, start_y): #TODO: We need to check the points in the trajectory to make sure they are valid (no collisions, within range, etc.) we have check_position and check_angles in kinematics.py
-        distance = np.sqrt((x-start_x)**2 + (y-start_y)**2)
-        time = distance / self.max_linear_velocity
-        steps = int(time * self.publish_rate)
-        x_traj = np.linspace(start_x, x, steps)
-        y_traj = np.linspace(start_y, y, steps)
-        for i in range(steps):
-            pos = self.kinematics.kinematics(kinematics_type="inverse", x=x_traj[i], y=y_traj[i])
-            self.trajectory.append(pos)
-
-
-    def moveL(self, x, y, start_x , start_y):
+    def moveL(self, x, y, start_x = None , start_y = None):
+        if start_x is None and start_y is None:
+            angles = self.trajectory[len(self.trajectory)-1]
+            pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=angles.get("upper_arm_angle"), lower_arm_angle=angles.get("lower_arm_angle"))
+            start_x = pos.get("x")
+            start_y = pos.get("y")
+        elif start_x is None or start_y is None:
+            print("Invalid Input received")
+            return
+        
         distance = np.sqrt((x - start_x)**2 + (y - start_y)**2) # Distance between start and end point
 
         # Set values for acceleration and deceleration as well as max velocity
@@ -139,6 +137,35 @@ class controller:
                 return False
         self.trajectory_valid = True
         return True
+
+
+    def calculate_max_velocity_and_acceleration(self):
+        max_velocity = 0
+        max_acceleration = 0
+        prev_velocity_upper = prev_velocity_lower = 0
+
+        points = self.trajectory
+        time_difference = self.dt
+
+        for i in range(1, len(points)):
+            displacement_upper = points[i]['upper_arm_angle'] - points[i-1]['upper_arm_angle']
+            displacement_lower = points[i]['lower_arm_angle'] - points[i-1]['lower_arm_angle']
+
+            velocity_upper = displacement_upper / time_difference
+            velocity_lower = displacement_lower / time_difference
+
+            max_velocity = max(max_velocity, velocity_upper, velocity_lower)
+
+            if i != 1:
+                acceleration_upper = (velocity_upper - prev_velocity_upper) / time_difference
+                acceleration_lower = (velocity_lower - prev_velocity_lower) / time_difference
+
+                max_acceleration = max(max_acceleration, acceleration_upper, acceleration_lower)
+
+            prev_velocity_upper = velocity_upper
+            prev_velocity_lower = velocity_lower
+
+        return {"max_velocity": max_velocity, "max_acceleration": max_acceleration}
 
 
     def execute_trajectory(self):

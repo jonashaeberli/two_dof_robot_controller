@@ -58,13 +58,8 @@ class hardware:
             print("Not connected to ODrives")
             return False
 
-        if self.kinematics.check_angles(upper_arm_angle, lower_arm_angle):
-            self.upper_arm_drive.axis0.controller.input_pos = self.upper_arm_command_position
-            self.lower_arm_drive.axis0.controller.input_pos = self.lower_arm_command_position
-            
-        else:
-            print("Invalid Position or collision detected. This should not happen! There has to be an error in the controller")
-            return False
+        self.upper_arm_drive.axis0.controller.input_pos = self.upper_arm_command_position
+        self.lower_arm_drive.axis0.controller.input_pos = self.lower_arm_command_position
     
 
     def get_pos(self):
