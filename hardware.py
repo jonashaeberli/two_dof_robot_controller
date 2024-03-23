@@ -39,8 +39,8 @@ class hardware:
         if self.upper_arm_drive is not None and self.lower_arm_drive is not None:
             self.connected = True
             print("Connected to ODrives")
-            # self.ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1) # Chnange USB port to the one of the arduino
-            # self.ser.reset_input_buffer()
+            self.ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1) # Change USB port to the one of the arduino
+            self.ser.reset_input_buffer()
             return True
         else:
             print("Could not connect to ODrives")
