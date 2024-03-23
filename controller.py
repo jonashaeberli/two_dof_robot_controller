@@ -7,8 +7,8 @@ class controller:
         self.trajectory_resolution = 0.1 # mm
         self.dt = 1 / self.publish_rate
 
-        self.max_linear_velocity = 100 # mm/s
-        self.max_linear_acceleration = 40 # mm/s^2 accel/deccel
+        self.max_linear_velocity = 200 # mm/s
+        self.max_linear_acceleration = 200 # mm/s^2 accel/deccel
 
         self.max_angular_velocity = np.pi # rad/s
         self.max_angular_acceleration = 12*np.pi # rad/s^2 accel/deccel
@@ -50,53 +50,58 @@ class controller:
         distance = np.sqrt((x - start_x)**2 + (y - start_y)**2) # Distance between start and end point
 
         # Set values for acceleration and deceleration as well as max velocity
-        max_linear_velocity = self.max_linear_velocity
         acceleration = self.max_linear_acceleration
-        deceleration = -self.max_linear_acceleration # We do it like that that we later can have different acceleration and deceleration values
-        
-        acceleration_time = max_linear_velocity / acceleration
-        deceleration_time = max_linear_velocity / deceleration # We do it like that that we later can have different acceleration and deceleration values
-        
-        acceleration_distance = 0.5 * acceleration * acceleration_time**2
-        deceleration_distance = 0.5 * deceleration * deceleration_time**2 # We do it like that that we later can have different acceleration and deceleration values
-        
+        acceleration_distance = distance / 2
+        max_linear_velocity = np.sqrt(2 * acceleration * acceleration_distance)
+
         # Adjust maximum velocity based on acceleration and deceleration distances
-        if (acceleration_distance + deceleration_distance) > distance:
+        if max_linear_velocity > self.max_linear_velocity:
             # Enough distance for both acceleration and deceleration
-            time_at_max_velocity = (distance - acceleration_distance - deceleration_distance) / max_linear_velocity
+            print("Enough distance for both acceleration and deceleration")
+            max_linear_velocity = self.max_linear_velocity
+            acceleration_time = max_linear_velocity / acceleration
+            acceleration_distance = 0.5 * acceleration * acceleration_time**2
+            time_at_max_velocity = (distance - (2*acceleration_distance)) / max_linear_velocity
         else:
             # Not enough distance for both acceleration and deceleration, adjust max velocity
-            max_linear_velocity = np.sqrt(distance * (acceleration + deceleration))
+            print("Not enough distance for both acceleration and deceleration")
+            acceleration_distance = distance / 2
+            max_linear_velocity = np.sqrt(2 * acceleration * acceleration_distance)
+            acceleration_time = max_linear_velocity / acceleration
             time_at_max_velocity = 0
         
         # Calculate total time
-        total_time = acceleration_time + time_at_max_velocity + deceleration_time
+        total_time = (2*acceleration_time) + time_at_max_velocity
         
         # Calculate number of steps based on update rate
-        steps = int(total_time * self.publish_rate)
+        steps = int(total_time * self.publish_rate * 10)
         
         # Generate time array for trajectory
         time_array = np.linspace(0, total_time, steps)
+        iteration = 10
         
         # Generate trajectory points
         for t in time_array:
-            if t <= acceleration_time:
-                # Acceleration phase
-                v = acceleration * t
-            elif t <= acceleration_time + time_at_max_velocity:
-                # Constant velocity phase
-                v = max_linear_velocity
+            iteration += 1
+            if time_at_max_velocity == 0:
+                if t <= acceleration_time:
+                    displacement = 0.5 * acceleration * t**2
+                else:
+                    displacement = distance - 0.5 * acceleration * (t - total_time)**2
             else:
-                # Deceleration phase
-                v = max_linear_velocity - deceleration * (t - acceleration_time - time_at_max_velocity)
+                if t <= acceleration_time:
+                    displacement = 0.5 * acceleration * t**2
+                elif t <= (acceleration_time + time_at_max_velocity):
+                    displacement = acceleration_distance + max_linear_velocity * (t - acceleration_time)
+                else:
+                    t_deceleration = t - (acceleration_time + time_at_max_velocity)
+                    displacement = acceleration_distance + max_linear_velocity * time_at_max_velocity + max_linear_velocity * t_deceleration - 0.5 * acceleration * t_deceleration**2
             
-            # Calculate position at time t
-            displacement = 0.5 * (acceleration * t**2) if t <= acceleration_time else acceleration_distance
-            displacement += (max_linear_velocity * (t - acceleration_time)) if t <= acceleration_time + time_at_max_velocity else acceleration_distance + max_linear_velocity * (t - acceleration_time - time_at_max_velocity)
-            displacement += (max_linear_velocity * (deceleration_time - (t - acceleration_time - time_at_max_velocity)) - 0.5 * deceleration * (deceleration_time - (t - acceleration_time - time_at_max_velocity))**2) if t > total_time - deceleration_time else distance
-
-            pos = self.kinematics.kinematics(kinematics_type="inverse", x=start_x + (x - start_x) * (displacement / distance), y=start_y + (y - start_y) * (displacement / distance))
-            self.trajectory.append(pos)
+            if iteration % 10 == 0:
+                pos = self.kinematics.kinematics(kinematics_type="inverse", x=start_x + (x-start_x) * (displacement / distance), y=start_y + (y - start_y) * (displacement / distance))
+                self.trajectory.append(pos)
+            elif iteration >= 10:
+                iteration = 0
 
         # TODO: Execute trajectory if execution is enabled. Else we should return the trajectory
 
@@ -150,9 +155,9 @@ class controller:
                 if sleep_time > 0:  # if there's time left, sleep
                     time.sleep(sleep_time)
                     debt_time += sleep_time - self.dt  # update debt time
-            self.clear_trajectory()
         else:
             print("Trajectory is not valid or validated, can't execute!")
+        return True
 
 
     def clear_trajectory(self):
