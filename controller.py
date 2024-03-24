@@ -247,6 +247,16 @@ class controller:
                     start_time = time.time()  # start timing
                     self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
                     end_time = time.time()  # end timing
+
+                    # Get the actual position
+                    actual_pos = self.hardware.get_angles()
+
+                    # Check if the actual position is within 0.5% of the commanded position
+                    if abs(actual_pos['upper_arm_angle'] - pos.get('upper_arm_angle')) > 0.005 * pos.get('upper_arm_angle') or \
+                       abs(actual_pos['lower_arm_angle'] - pos.get('lower_arm_angle')) > 0.005 * pos.get('lower_arm_angle'):
+                        print("Error: Actual position is more than 0.5% out of the commanded position")
+                        return
+                    
                     elapsed_time = end_time - start_time  # calculate elapsed time
 
                     debt_time += elapsed_time - self.dt  # update debt time
@@ -256,6 +266,7 @@ class controller:
                         debt_time += sleep_time - self.dt  # update debt time
             self.trajectory_valid = False
         else:
+            print("Error: Trajectory is not valid")
             print("Trajectory is not valid or validated, can't execute!")
     
 
