@@ -249,12 +249,7 @@ class controller:
                     end_time = time.time()  # end timing
 
                     # Get the actual position
-                    actual_pos = self.hardware.get_angles()
-
-                    # Check if the actual position is within 0.5% of the commanded position
-                    if abs(actual_pos['upper_arm_angle'] - pos.get('upper_arm_angle')) > 0.005 * pos.get('upper_arm_angle') or \
-                       abs(actual_pos['lower_arm_angle'] - pos.get('lower_arm_angle')) > 0.005 * pos.get('lower_arm_angle'):
-                        print("Error: Actual position is more than 0.5% out of the commanded position")
+                    if self.hardware.check_errors():
                         return
                     
                     elapsed_time = end_time - start_time  # calculate elapsed time

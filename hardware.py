@@ -71,12 +71,19 @@ class hardware:
         return self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=pos.get("upper_arm_angle"), lower_arm_angle=pos.get("lower_arm_angle"))
     
 
-    def get_angles(self):
-        return self.pos_to_angle(self.upper_arm_drive.axis0.encoder.pos_estimate, self.lower_arm_drive.axis0.encoder.pos_estimate)
-
     def pos_to_angle(self, upper_arm_pos, lower_arm_pos):
         return {"upper_arm_angle": (self.upper_arm_zero - upper_arm_pos) * (2 * np.pi) / self.gear_ratio, "lower_arm_angle": -1 * ((self.lower_arm_zero - lower_arm_pos) * (2 * np.pi) / self.gear_ratio)}
     
+
+    def check_errors(self):
+        if self.upper_arm_drive.error != 0 and self.lower_arm_drive.axis0.error != 0:
+            print("Upper Arm Error: ", self.upper_arm_drive.axis0.error)
+            return True
+        if self.lower_arm_drive.error != 0 and self.lower_arm_drive.axis0.error != 0:
+            print("Lower Arm Error: ", self.lower_arm_drive.axis0.error)
+            return True
+        return False
+
 
     def gripper(self, state):
         if state == "open":
