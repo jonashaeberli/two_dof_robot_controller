@@ -7,10 +7,10 @@ class controller:
         self.trajectory_resolution = 0.1 # mm
         self.dt = 1 / self.publish_rate
 
-        self.max_linear_velocity = 800 # mm/s
-        self.max_linear_acceleration = 2000 # mm/s^2 accel/deccel
+        self.max_linear_velocity = 10 # mm/s
+        self.max_linear_acceleration = 10 # mm/s^2 accel/deccel
 
-        self.max_angular_velocity = np.pi / 20 # rad/s
+        self.max_angular_velocity = np.pi / 40 # rad/s
         self.max_angular_acceleration = 10*np.pi # rad/s^2 accel/deccel
 
         self.trajectory = []
@@ -19,8 +19,9 @@ class controller:
         self.status = False
 
 
-    def handover(self, hardware, kinematics):
+    def handover(self, hardware, sim, kinematics):
         self.hardware = hardware
+        self.sim = sim
         self.kinematics = kinematics
 
 
@@ -44,21 +45,40 @@ class controller:
             return
 
         self.clear_trajectory()
-        pos = self.hardware.get_pos()
         zero_position = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=np.deg2rad(109.9), lower_arm_angle=np.deg2rad(9.9))
-        self.moveJconst(zero_position.get("x"), zero_position.get("y"), start_x=pos.get("x"), start_y=pos.get("y"))
+        self.moveJconst(zero_position.get("x"), zero_position.get("y"))
         if self.validate_trajectory():
             print("Trajectory is valid")
             input("Press Enter to go to reference position KEEP HANDS ON THE EMERGENCY STOP")
             self.execute_trajectory()
+        input("Confirm that the robot is in the zero position and press Enter to continue to park position")
+        self.clear_trajectory()
+        park_position = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=np.deg2rad(80), lower_arm_angle=np.deg2rad(-70))
+        self.moveJconst(park_position.get("x"), park_position.get("y"), start_x=zero_position.get("x"), start_y=zero_position.get("y"))
+        if self.validate_trajectory():
+            print("Trajectory is valid")
+            input("Press Enter to go to park position KEEP HANDS ON THE EMERGENCY STOP")
+            self.execute_trajectory()
+        self.clear_trajectory()
 
 
     def moveL(self, x, y, start_x = None , start_y = None):
         if start_x is None and start_y is None:
-            angles = self.trajectory[len(self.trajectory)-1]
-            pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=angles.get("upper_arm_angle"), lower_arm_angle=angles.get("lower_arm_angle"))
-            start_x = pos.get("x")
-            start_y = pos.get("y")
+            if len(self.trajectory) == 0: 
+                pos = self.hardware.get_pos()
+                start_x = pos.get("x")
+                start_y = pos.get("y")
+            else:
+                index = len(self.trajectory) - 1
+                while 'gripper' in self.trajectory[index] and index >= 0:
+                    index -= 1
+                if index >= 0:
+                    angles = self.trajectory[index]
+                    pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=angles.get("upper_arm_angle"), lower_arm_angle=angles.get("lower_arm_angle"))
+                    start_x = pos.get("x")
+                    start_y = pos.get("y")
+                else:
+                    print("No valid angles found in trajectory")
         elif start_x is None or start_y is None:
             print("Invalid Input received")
             return
@@ -118,10 +138,21 @@ class controller:
 
     def moveJconst(self, x, y, execution = True, start_x = None, start_y = None):
         if start_x is None and start_y is None:
-            angles = self.trajectory[len(self.trajectory)-1]
-            pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=angles.get("upper_arm_angle"), lower_arm_angle=angles.get("lower_arm_angle"))
-            start_x = pos.get("x")
-            start_y = pos.get("y")
+            if len(self.trajectory) == 0: 
+                pos = self.hardware.get_pos()
+                start_x = pos.get("x")
+                start_y = pos.get("y")
+            else:
+                index = len(self.trajectory) - 1
+                while 'gripper' in self.trajectory[index] and index >= 0:
+                    index -= 1
+                if index >= 0:
+                    angles = self.trajectory[index]
+                    pos = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=angles.get("upper_arm_angle"), lower_arm_angle=angles.get("lower_arm_angle"))
+                    start_x = pos.get("x")
+                    start_y = pos.get("y")
+                else:
+                    print("No valid angles found in trajectory")
         elif start_x is None or start_y is None:
             print("Invalid Input received")
             return
@@ -146,9 +177,9 @@ class controller:
 
     def validate_trajectory(self):
         for pos in self.trajectory:
-            if self.kinematics.check_angles(pos.get("upper_arm_angle"), pos.get("lower_arm_angle")):
+            if 'gripper' in pos:
                 continue
-            else:
+            if not self.kinematics.check_angles(pos.get("upper_arm_angle"), pos.get("lower_arm_angle")):
                 return False
         self.trajectory_valid = True
         return True
@@ -187,20 +218,53 @@ class controller:
         debt_time = 0.0
         if self.trajectory_valid:
             for pos in self.trajectory:
-                start_time = time.time()  # start timing
-                self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
-                end_time = time.time()  # end timing
-                elapsed_time = end_time - start_time  # calculate elapsed time
+                if "gripper" in pos and len(pos) == 1:
+                    if pos.get("gripper") == "open" and self.sim is False:
+                        self.hardware.gripper("open")
+                    elif pos.get("gripper") == "close" and self.sim is False:
+                        self.hardware.gripper("close")
+                else:
+                    start_time = time.time()  # start timing
+                    self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
+                    end_time = time.time()  # end timing
+                    elapsed_time = end_time - start_time  # calculate elapsed time
 
-                debt_time += elapsed_time - self.dt  # update debt time
-                sleep_time = max(self.dt - elapsed_time, -debt_time)  # calculate sleep time, can't be more than debt time
-                if sleep_time > 0:  # if there's time left, sleep
-                    time.sleep(sleep_time)
-                    debt_time += sleep_time - self.dt  # update debt time
+                    debt_time += elapsed_time - self.dt  # update debt time
+                    sleep_time = max(self.dt - elapsed_time, -debt_time)  # calculate sleep time, can't be more than debt time
+                    if sleep_time > 0:  # if there's time left, sleep
+                        time.sleep(sleep_time)
+                        debt_time += sleep_time - self.dt  # update debt time
+            self.trajectory_valid = False
         else:
             print("Trajectory is not valid or validated, can't execute!")
-        return True
+    
 
+    def set_gripper(self, state):
+        if state == "open":
+            self.trajectory.append({"gripper": "open"})
+        elif state == "close":
+            self.trajectory.append({"gripper": "open"})
+        else:
+            print("Invalid state received")
+            return False
+        
+    
+    def pause_trajectory(self, time):
+        steps = int(time * self.publish_rate)
+        index = len(self.trajectory) - 1
+        while 'gripper' in self.trajectory[index] and index >= 0:
+            index -= 1
+        if index >= 0:
+            angles = self.trajectory[index]
+            for i in range(steps):
+                self.trajectory.append(angles)
+        else:
+            print("No valid angles found in trajectory")
+    
+
+    def set_move_params(self, linear_velocity, linear_acceleration):
+        self.max_linear_velocity = linear_velocity
+        self.max_linear_acceleration = linear_acceleration
 
     def clear_trajectory(self):
         self.trajectory = []
