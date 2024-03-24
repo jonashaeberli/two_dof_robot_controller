@@ -9,7 +9,7 @@ parser.add_argument('--accel', type=int, default=20, help='Acceleration')
 args = parser.parse_args()
 
 
-pnp = robot(run_sim=True)
+pnp = robot()
 pnp.controller.set_move_params(args.vel, args.accel)
 if pnp.controller.setup_controller():
     pnp.controller.check_zero_park()
