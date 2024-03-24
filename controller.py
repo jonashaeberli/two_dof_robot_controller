@@ -241,8 +241,10 @@ class controller:
                 if "gripper" in pos and len(pos) == 1:
                     if pos.get("gripper") == "open" and self.sim is False:
                         self.hardware.gripper("open")
+                        time.sleep(0.5)
                     elif pos.get("gripper") == "close" and self.sim is False:
                         self.hardware.gripper("close")
+                        time.sleep(0.5)
                 else:
                     start_time = time.time()  # start timing
                     self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
