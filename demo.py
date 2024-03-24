@@ -50,14 +50,14 @@ if pnp.controller.setup_controller():
     pnp.controller.moveL(175, 120, max_linear_velocity=1000, max_linear_acceleration=8000)
 
     #Third pick and place operation
-    pnp.controller.moveL(150, 120, max_linear_velocity=1000, max_linear_acceleration=8000)
-    pnp.controller.moveL(150, 50, max_linear_velocity=1000, max_linear_acceleration=8000)
+    pnp.controller.moveL(150, 120, max_linear_velocity=1000, max_linear_acceleration=6000)
+    pnp.controller.moveL(150, 50, max_linear_velocity=1000, max_linear_acceleration=6000)
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.set_gripper("close")
     pnp.controller.pause_trajectory(0.2)
-    pnp.controller.moveL(150, 120, max_linear_velocity=1000, max_linear_acceleration=8000)
+    pnp.controller.moveL(150, 120, max_linear_velocity=1000, max_linear_acceleration=6000)
     pnp.controller.moveL(500, 120, max_linear_velocity=1300, max_linear_acceleration=17000)
-    pnp.controller.moveL(500, 50, max_linear_velocity=1000, max_linear_acceleration=18500)
+    pnp.controller.moveL(500, 50, max_linear_velocity=1000, max_linear_acceleration=14500)
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.set_gripper("open")
     pnp.controller.pause_trajectory(0.2)
