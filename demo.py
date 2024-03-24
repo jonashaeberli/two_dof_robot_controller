@@ -20,7 +20,7 @@ if pnp.controller.setup_controller():
         pnp.controller.park()
     pnp.controller.clear_trajectory()
     print(len(pnp.controller.trajectory))
-    #Create a Trajectory
+    #First pick and place operation
     pnp.controller.moveL(150, 80, max_linear_velocity=1000, max_linear_acceleration=8000)
     pnp.controller.moveL(500, 80, max_linear_velocity=1300, max_linear_acceleration=17000)
     pnp.controller.moveL(500, 50, max_linear_velocity=1000, max_linear_acceleration=18500)
@@ -34,6 +34,50 @@ if pnp.controller.setup_controller():
     pnp.controller.set_gripper("open")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(150, 80, max_linear_velocity=1000, max_linear_acceleration=8000)
+
+    #Second pick and place operation
+    pnp.controller.moveL(475, 80, max_linear_velocity=1300, max_linear_acceleration=17000)
+    pnp.controller.moveL(475, 50, max_linear_velocity=1000, max_linear_acceleration=18500)
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.set_gripper("close")
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.moveL(475, 80, max_linear_velocity=1000, max_linear_acceleration=18500)
+    pnp.controller.moveL(175, 80, max_linear_velocity=1300, max_linear_acceleration=17000)
+    pnp.controller.moveL(175, 50, max_linear_velocity=1000, max_linear_acceleration=8000)
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.set_gripper("open")
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.moveL(175, 80, max_linear_velocity=1000, max_linear_acceleration=8000)
+
+    #Third pick and place operation
+    pnp.controller.moveL(150, 80, max_linear_velocity=1000, max_linear_acceleration=8000)
+    pnp.controller.moveL(150, 50, max_linear_velocity=1000, max_linear_acceleration=8000)
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.set_gripper("close")
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.moveL(150, 80, max_linear_velocity=1000, max_linear_acceleration=8000)
+    pnp.controller.moveL(500, 80, max_linear_velocity=1300, max_linear_acceleration=17000)
+    pnp.controller.moveL(500, 50, max_linear_velocity=1000, max_linear_acceleration=18500)
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.set_gripper("open")
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.moveL(500, 80, max_linear_velocity=1000, max_linear_acceleration=18500)
+
+    #Fourth pick and place operation
+    pnp.controller.moveL(175, 80, max_linear_velocity=1300, max_linear_acceleration=17000)
+    pnp.controller.moveL(175, 50, max_linear_velocity=1000, max_linear_acceleration=8000)
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.set_gripper("open")
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.moveL(175, 80, max_linear_velocity=1000, max_linear_acceleration=8000)
+    pnp.controller.moveL(475, 80, max_linear_velocity=1300, max_linear_acceleration=17000)
+    pnp.controller.moveL(475, 50, max_linear_velocity=1000, max_linear_acceleration=18500)
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.set_gripper("close")
+    pnp.controller.pause_trajectory(0.2)
+    pnp.controller.moveL(475, 80, max_linear_velocity=1000, max_linear_acceleration=18500)
+    pnp.controller.moveL(150, 80, max_linear_velocity=1300, max_linear_acceleration=17000)
+
     if pnp.controller.validate_trajectory():
         print("Trajectory is valid")
         print(pnp.controller.calculate_max_velocity_and_acceleration())
