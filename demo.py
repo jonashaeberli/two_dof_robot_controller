@@ -56,7 +56,7 @@ if pnp.controller.setup_controller():
     pnp.controller.set_gripper("close")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(150, 120, max_linear_velocity=1000, max_linear_acceleration=4000)
-    pnp.controller.moveL(500, 120, max_linear_velocity=1300, max_linear_acceleration=12500)
+    pnp.controller.moveL(500, 120, max_linear_velocity=1000, max_linear_acceleration=10000)
     pnp.controller.moveL(500, 50, max_linear_velocity=600, max_linear_acceleration=4000)
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.set_gripper("open")
