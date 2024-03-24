@@ -29,6 +29,7 @@ if pnp.controller.setup_controller():
     pnp.controller.moveL(150, 80)
     if pnp.controller.validate_trajectory():
         print("Trajectory is valid")
+        print(pnp.controller.calculate_max_velocity_and_acceleration)
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
         input("Press Enter to close")
