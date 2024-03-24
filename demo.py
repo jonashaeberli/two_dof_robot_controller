@@ -6,9 +6,10 @@ import time
 parser = argparse.ArgumentParser()
 parser.add_argument('--vel', type=int, default=50, help='Velocity')
 parser.add_argument('--accel', type=int, default=20, help='Acceleration')
-parser.add_argument('--calib', type=bool, default=True, help='Run calibration')
+parser.add_argument('--calib', type=str, default='True', help='Run calibration')
 args = parser.parse_args()
 
+args.calib = args.calib.lower() in ['true', '1', 't', 'y', 'yes']
 
 pnp = robot()
 pnp.controller.set_move_params(args.vel, args.accel)

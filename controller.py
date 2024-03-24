@@ -70,7 +70,7 @@ class controller:
             return
         self.clear_trajectory()
         park_position = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=np.deg2rad(80), lower_arm_angle=np.deg2rad(-70))
-        self.moveJconst(park_position.get("x"), park_position.get("y"))
+        self.moveL(park_position.get("x"), park_position.get("y"))
         if self.validate_trajectory():
             print("Trajectory is valid")
             input("Press Enter to go to park position KEEP HANDS ON THE EMERGENCY STOP")
