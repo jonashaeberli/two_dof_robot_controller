@@ -62,6 +62,22 @@ class controller:
         self.clear_trajectory()
 
 
+    def park(self):
+        if self.status == True:
+            input("Everything ready press Enter to go to zero position")
+        else:
+            print("Hardware/Sim not setup")
+            return
+        self.clear_trajectory()
+        park_position = self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=np.deg2rad(80), lower_arm_angle=np.deg2rad(-70))
+        self.moveJconst(park_position.get("x"), park_position.get("y"))
+        if self.validate_trajectory():
+            print("Trajectory is valid")
+            input("Press Enter to go to park position KEEP HANDS ON THE EMERGENCY STOP")
+            self.execute_trajectory()
+        self.clear_trajectory()
+
+
     def moveL(self, x, y, start_x = None , start_y = None):
         if start_x is None and start_y is None:
             if len(self.trajectory) == 0: 
@@ -194,6 +210,10 @@ class controller:
         time_difference = self.dt
 
         for i in range(1, len(points)):
+            # Skip the point if it contains "gripper"
+            if 'gripper' in points[i] or 'gripper' in points[i-1]:
+                continue
+
             displacement_upper = points[i]['upper_arm_angle'] - points[i-1]['upper_arm_angle']
             displacement_lower = points[i]['lower_arm_angle'] - points[i-1]['lower_arm_angle']
 
@@ -211,7 +231,7 @@ class controller:
             prev_velocity_upper = velocity_upper
             prev_velocity_lower = velocity_lower
 
-        return {"max_velocity": max_velocity, "max_acceleration": max_acceleration}
+        return {"max_velocity": (max_velocity/(2*np.pi))*self.hardware.gear_ratio, "max_acceleration": (max_acceleration/(2*np.pi))*self.hardware.gear_ratio}
 
 
     def execute_trajectory(self):

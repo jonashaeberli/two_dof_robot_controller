@@ -7,6 +7,8 @@ class sim:
     def __init__(self):
         self.running = False
 
+        self.gear_ratio = 100
+
     def handover(self, kinematics):
         self.kinematics = kinematics
 
