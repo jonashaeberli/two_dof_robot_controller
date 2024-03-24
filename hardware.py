@@ -76,13 +76,12 @@ class hardware:
     
 
     def check_errors(self):
-        if self.lower_arm_drive.axis0.error != 0:
+        if self.upper_arm_drive.axis0.error != 0:
             print("Upper Arm Error: ", self.upper_arm_drive.axis0.error)
             return True
         if self.lower_arm_drive.axis0.error != 0:
             print("Lower Arm Error: ", self.lower_arm_drive.axis0.error)
             return True
-        print(self.upper_arm_drive.axis0.error)
         return False
 
 
