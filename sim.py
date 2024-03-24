@@ -101,3 +101,7 @@ class sim:
 
     def get_pos(self):
         return self.kinematics.kinematics(kinematics_type="forward", upper_arm_angle=self.upper_arm_angle, lower_arm_angle=self.lower_arm_angle)
+    
+
+    def check_errors(self):
+        return False

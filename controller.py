@@ -78,7 +78,9 @@ class controller:
         self.clear_trajectory()
 
 
-    def moveL(self, x, y, start_x = None , start_y = None):
+    def moveL(self, x, y, start_x = None , start_y = None, max_linear_velocity = None, max_linear_acceleration = None):
+        max_linear_velocity_prev = self.max_linear_velocity
+        max_linear_acceleration_prev = self.max_linear_acceleration
         if start_x is None and start_y is None:
             if len(self.trajectory) == 0: 
                 pos = self.hardware.get_pos()
@@ -96,6 +98,15 @@ class controller:
                 else:
                     print("No valid angles found in trajectory")
         elif start_x is None or start_y is None:
+            print("Invalid Input received")
+            return
+        
+        if max_linear_acceleration is not None and max_linear_velocity is not None:
+            max_linear_velocity_prev = self.max_linear_velocity
+            max_linear_acceleration_prev = self.max_linear_acceleration
+            self.max_linear_velocity = max_linear_velocity
+            self.max_linear_acceleration = max_linear_acceleration
+        elif max_linear_acceleration is not None or max_linear_velocity is not None:
             print("Invalid Input received")
             return
         
@@ -150,6 +161,9 @@ class controller:
 
             pos = self.kinematics.kinematics(kinematics_type="inverse", x=start_x + (x-start_x) * (displacement / distance), y=start_y + (y - start_y) * (displacement / distance))
             self.trajectory.append(pos)
+
+            self.max_linear_velocity = max_linear_velocity_prev
+            self.max_linear_acceleration = max_linear_acceleration_prev
 
 
     def moveJconst(self, x, y, execution = True, start_x = None, start_y = None):
