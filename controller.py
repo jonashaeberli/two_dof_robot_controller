@@ -3,7 +3,7 @@ import time
 
 class controller:
     def __init__(self):
-        self.publish_rate = 200 # Hz
+        self.publish_rate = 100 # Hz
         self.trajectory_resolution = 0.1 # mm
         self.dt = 1 / self.publish_rate
 
