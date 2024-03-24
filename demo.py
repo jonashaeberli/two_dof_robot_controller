@@ -47,7 +47,7 @@ if pnp.controller.setup_controller():
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.set_gripper("open")
     pnp.controller.pause_trajectory(0.2)
-    pnp.controller.moveL(175, 80, max_linear_velocity=1000, max_linear_acceleration=8000)
+    pnp.controller.moveL(175, 120, max_linear_velocity=1000, max_linear_acceleration=8000)
 
     #Third pick and place operation
     pnp.controller.moveL(150, 120, max_linear_velocity=1000, max_linear_acceleration=8000)
