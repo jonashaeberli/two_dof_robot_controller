@@ -18,6 +18,8 @@ class controller:
 
         self.status = False
 
+        self.tolerance = 0.1 # degrees
+
 
     def handover(self, hardware, sim, kinematics):
         self.hardware = hardware
@@ -64,7 +66,7 @@ class controller:
 
     def park(self):
         if self.status == True:
-            input("Everything ready press Enter to go to zero position")
+            input("Everything ready press Enter to go to park position")
         else:
             print("Hardware/Sim not setup")
             return
@@ -249,8 +251,13 @@ class controller:
 
 
     def execute_trajectory(self):
-        debt_time = 0.0
         if self.trajectory_valid:
+            if self.trajectory is not [] and "gripper" not in self.trajectory[0]:
+                prev_pos = self.trajectory[0]
+            else:
+                print("Error: Trajectory is empty")
+                return
+            self.last_run_time = time.perf_counter()
             for pos in self.trajectory:
                 if "gripper" in pos and len(pos) == 1:
                     if pos.get("gripper") == "open" and self.sim is False:
@@ -258,21 +265,25 @@ class controller:
                     elif pos.get("gripper") == "close" and self.sim is False:
                         self.hardware.gripper("close")
                 else:
-                    start_time = time.time()  # start timing
-                    self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
-                    end_time = time.time()  # end timing
+                    angles = self.hardware.get_angles()
+                    if abs(prev_pos.get("upper_arm_angle") - angles.get("upper_arm_angle")) < self.tolerance and abs(prev_pos.get("lower_arm_angle") - angles.get("lower_arm_angle")) < 1:
+                        self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
+                        prev_pos = pos
+                    else:
+                        print("Error: ODrive could not reach the sent position")
+                        print("Upper Arm: ", angles.get("upper_arm_angle"), "Expected: ", prev_pos.get("upper_arm_angle"))
+                        print("Lower Arm: ", angles.get("lower_arm_angle"), "Expected: ", prev_pos.get("lower_arm_angle"))
+                        return
 
-                    # Get the actual position
+                    # Check for errors
                     if self.hardware.check_errors():
                         return
                     
-                    elapsed_time = end_time - start_time  # calculate elapsed time
 
-                    debt_time += elapsed_time - self.dt  # update debt time
-                    sleep_time = max(self.dt - elapsed_time, -debt_time)  # calculate sleep time, can't be more than debt time
-                    if sleep_time > 0:  # if there's time left, sleep
-                        time.sleep(sleep_time)
-                        debt_time += sleep_time - self.dt  # update debt time
+                while time.perf_counter() - self.last_run_time < self.dt:
+                    pass  # busy wait until self.dt time has passed
+                self.last_run_time = time.perf_counter()
+
             self.trajectory_valid = False
         else:
             print("Error: Trajectory is not valid")
