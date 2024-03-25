@@ -4,8 +4,8 @@ import time
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--vel', type=int, default=1000, help='Velocity')
-parser.add_argument('--accel', type=int, default=3500, help='Acceleration')
+parser.add_argument('--vel', type=int, default=100, help='Velocity')
+parser.add_argument('--accel', type=int, default=500, help='Acceleration')
 parser.add_argument('--calib', type=str, default='True', help='Run calibration')
 args = parser.parse_args()
 
