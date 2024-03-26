@@ -10,7 +10,7 @@ class hardware:
         self.upper_arm_reference_turns = -1.8 # in turns
 
         self.lower_arm_serial = "307234623030"
-        self.lower_arm_reference_turns = 14.3 # in turns
+        self.lower_arm_reference_turns = 13.1 # in turns
 
         self.gear_ratio = 100 # Both arms have the same gear ration
 
