@@ -4,14 +4,14 @@ import time
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--vel', type=int, default=10, help='Velocity')
+parser.add_argument('--vel', type=int, default=50, help='Velocity')
 parser.add_argument('--accel', type=int, default=50, help='Acceleration')
-parser.add_argument('--calib', type=str, default='True', help='Run calibration')
+parser.add_argument('--calib', type=str, default='False', help='Run calibration')
 args = parser.parse_args()
 
 args.calib = args.calib.lower() in ['true', '1', 't', 'y', 'yes']
 
-pnp = robot()
+pnp = robot(run_sim=True)
 pnp.controller.set_move_params(args.vel, args.accel)
 if pnp.controller.setup_controller():
     if args.calib:
@@ -31,7 +31,6 @@ if pnp.controller.setup_controller():
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(500, 80)
     pnp.controller.moveL(150, 80)
@@ -43,7 +42,6 @@ if pnp.controller.setup_controller():
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(150, 80)
 
@@ -57,7 +55,6 @@ if pnp.controller.setup_controller():
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(475, 80)
     pnp.controller.moveL(175, 80)
@@ -69,7 +66,6 @@ if pnp.controller.setup_controller():
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(175, 120)
 
@@ -83,7 +79,6 @@ if pnp.controller.setup_controller():
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(150, 120)
     pnp.controller.moveL(500, 120)
@@ -95,7 +90,6 @@ if pnp.controller.setup_controller():
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(500, 80)
 
@@ -109,7 +103,6 @@ if pnp.controller.setup_controller():
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(175, 80)
     pnp.controller.moveL(475, 80)
@@ -121,7 +114,6 @@ if pnp.controller.setup_controller():
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
     pnp.controller.pause_trajectory(0.2)
     pnp.controller.moveL(475, 80)
     pnp.controller.moveL(150, 80)
@@ -130,11 +122,9 @@ if pnp.controller.setup_controller():
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
 
     if pnp.controller.validate_trajectory():
         print("Trajectory is valid")
         print(pnp.controller.calculate_max_velocity_and_acceleration())
         input("Press Enter to execute pnp trajectory")
         pnp.controller.execute_trajectory()
-        input("Press Enter to close")
