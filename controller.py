@@ -266,7 +266,6 @@ class controller:
                         self.hardware.gripper("close")
                 else:
                     angles = self.hardware.get_angles()
-                    print(angles)
                     if abs(prev_pos.get("upper_arm_angle") - angles.get("upper_arm_angle")) < self.tolerance and abs(prev_pos.get("lower_arm_angle") - angles.get("lower_arm_angle")) < 1:
                         self.hardware.move(pos.get("upper_arm_angle"), pos.get("lower_arm_angle"))
                         prev_pos = pos

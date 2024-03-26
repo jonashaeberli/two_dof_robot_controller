@@ -76,6 +76,8 @@ class hardware:
     
 
     def pos_to_angle(self, upper_arm_pos, lower_arm_pos):
+        print("Upper Arm Pos: ", upper_arm_pos)
+        print("Lower Arm Pos: ", lower_arm_pos)
         return {"upper_arm_angle": (self.upper_arm_zero - upper_arm_pos) * (2 * np.pi) / self.gear_ratio, "lower_arm_angle": -1 * ((self.lower_arm_zero - lower_arm_pos) * (2 * np.pi) / self.gear_ratio)}
     
 
